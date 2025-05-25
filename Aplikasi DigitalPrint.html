@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id" class="transition-colors duration-300">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pesan Digital Printing</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAuk8bJAGQc8f_EqYoHnyE7Fgc_sEKJHcY",
+      authDomain: "digitalprint-ab918.firebaseapp.com",
+      databaseURL: "https://digitalprint-ab918-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "digitalprint-ab918",
+      storageBucket: "digitalprint-ab918.appspot.com",
+      messagingSenderId: "613793781438",
+      appId: "1:613793781438:web:b2c46da940d1d1f56ef0ef"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
+
+  <!-- Uploadcare -->
+  <script>
+    UPLOADCARE_PUBLIC_KEY = 'd4d6fae6d063c7d17986';
+  </script>
+  <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    html, body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-[#fffaf0] dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen flex items-center justify-center p-4 relative">
+
+  <!-- Tombol Toggle Tema -->
+  <div class="absolute top-4 right-4">
+    <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white transition duration-300">
+      <i data-lucide="moon" class="w-6 h-6"></i>
+    </button>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 w-full max-w-md transition-colors duration-300">
+    <h2 class="text-xl font-bold mb-6 text-center text-[#d2691e] dark:text-orange-300">Form Pemesanan Digital Printing</h2>
+    <form id="orderForm" class="space-y-4" autocomplete="off">
+      <input type="text" name="nama" placeholder="Nama Pemesan" required class="p-3 w-full border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+      <input type="text" name="kontak" placeholder="Nomor HP / WhatsApp" required inputmode="numeric" pattern="\d+" class="p-3 w-full border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+
+      <select name="jenis" id="jenisProduk" required class="p-3 w-full border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <option value="" disabled selected>Pilih Jenis Produk</option>
+        <option value="Banner">Banner</option>
+        <option value="Brosur">Brosur</option>
+        <option value="Stiker">Stiker</option>
+        <option value="Kartu Nama">Kartu Nama</option>
+      </select>
+
+      <div id="ukuranBannerContainer" class="flex space-x-2 hidden">
+        <input type="number" name="lebar" min="1" placeholder="Lebar (cm)" class="p-3 w-1/2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600" />
+        <input type="number" name="tinggi" min="1" placeholder="Tinggi (cm)" class="p-3 w-1/2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600" />
+      </div>
+
+      <div id="ukuranBrosurContainer" class="hidden">
+        <select name="ukuranBrosur" id="ukuranBrosur" class="p-3 w-full border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          <option value="" disabled selected>Pilih Ukuran Brosur</option>
+          <option value="A4">A4</option>
+          <option value="A5">A5</option>
+          <option value="A6">A6</option>
+          <option value="A7">A7</option>
+        </select>
+      </div>
+
+      <input type="number" name="jumlah" min="1" placeholder="Jumlah Cetakan" required class="p-3 w-full border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600" />
+
+      <div class="flex items-center space-x-2">
+        <input type="checkbox" id="adaDesain" class="accent-[#d2691e]" />
+        <label for="adaDesain" class="text-sm select-none">Sudah ada desain?</label>
+      </div>
+
+      <div id="uploadcareContainer" class="hidden">
+        <input type="hidden" role="uploadcare-uploader" data-clearable id="fileUpload" />
+        <div id="previewLink" class="text-xs text-blue-600 underline mt-2"></div>
+      </div>
+
+      <textarea name="catatan" placeholder="Catatan tambahan" rows="3" class="p-3 w-full border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#d2691e] dark:bg-gray-700 dark:border-gray-600"></textarea>
+
+      <button type="submit" class="w-full bg-[#d2691e] hover:bg-[#b85b1c] text-white py-3 rounded-xl text-sm font-semibold transition-colors duration-300">Kirim Pesanan</button>
+    </form>
+  </div>
+
+  <script>
+    const checkbox = document.getElementById('adaDesain');
+    const uploadcareContainer = document.getElementById('uploadcareContainer');
+    const previewLink = document.getElementById('previewLink');
+    const jenisProduk = document.getElementById('jenisProduk');
+    const ukuranBannerContainer = document.getElementById('ukuranBannerContainer');
+    const ukuranBrosurContainer = document.getElementById('ukuranBrosurContainer');
+    const lebarInput = ukuranBannerContainer.querySelector('input[name="lebar"]');
+    const tinggiInput = ukuranBannerContainer.querySelector('input[name="tinggi"]');
+    const ukuranBrosurSelect = document.getElementById('ukuranBrosur');
+
+    const audioNotif = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+    checkbox.addEventListener('change', () => {
+      uploadcareContainer.classList.toggle('hidden', !checkbox.checked);
+    });
+
+    uploadcare.Widget('[role=uploadcare-uploader]').onUploadComplete(fileInfo => {
+      previewLink.innerHTML = `📎 <a href="${fileInfo.cdnUrl}" target="_blank" rel="noopener noreferrer">${fileInfo.name}</a>`;
+      previewLink.dataset.url = fileInfo.cdnUrl;
+    });
+
+    function updateUkuranVisibility() {
+      if (jenisProduk.value === 'Banner') {
+        ukuranBannerContainer.classList.remove('hidden');
+        ukuranBrosurContainer.classList.add('hidden');
+        lebarInput.required = true;
+        tinggiInput.required = true;
+        ukuranBrosurSelect.required = false;
+        ukuranBrosurSelect.value = '';
+      } else if (jenisProduk.value === 'Brosur') {
+        ukuranBannerContainer.classList.add('hidden');
+        ukuranBrosurContainer.classList.remove('hidden');
+        lebarInput.required = false;
+        tinggiInput.required = false;
+        lebarInput.value = '';
+        tinggiInput.value = '';
+        ukuranBrosurSelect.required = true;
+      } else {
+        ukuranBannerContainer.classList.add('hidden');
+        ukuranBrosurContainer.classList.add('hidden');
+        lebarInput.required = false;
+        tinggiInput.required = false;
+        ukuranBrosurSelect.required = false;
+        lebarInput.value = '';
+        tinggiInput.value = '';
+        ukuranBrosurSelect.value = '';
+      }
+    }
+
+    jenisProduk.addEventListener('change', updateUkuranVisibility);
+    updateUkuranVisibility();
+
+    document.getElementById("orderForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const form = e.target;
+
+      const data = {
+        nama: form.nama.value.trim(),
+        kontak: form.kontak.value.trim(),
+        jenis: form.jenis.value,
+        ukuran: null,
+        jumlah: Number(form.jumlah.value),
+        catatan: form.catatan.value.trim(),
+        waktu: new Date().toISOString(),
+        linkDesain: checkbox.checked ? previewLink.dataset.url || null : null
+      };
+
+      if (!/^\d+$/.test(data.kontak)) {
+        alert("❗ Nomor HP / WhatsApp hanya boleh berisi angka.");
+        return;
+      }
+
+      if (data.jenis === 'Banner') {
+        data.ukuran = { lebar: Number(form.lebar.value), tinggi: Number(form.tinggi.value) };
+      } else if (data.jenis === 'Brosur') {
+        data.ukuran = { brosur: form.ukuranBrosur.value };
+      }
+
+      if (checkbox.checked && !data.linkDesain) {
+        alert("❗ File desain belum diupload.");
+        return;
+      }
+
+      try {
+        await db.ref('orders').push(data);
+        audioNotif.play();
+        alert("✅ Pesanan berhasil dikirim!");
+        form.reset();
+        uploadcareContainer.classList.add('hidden');
+        previewLink.innerHTML = '';
+        updateUkuranVisibility();
+      } catch (err) {
+        alert("❌ Gagal mengirim pesanan: " + err.message);
+      }
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById("themeToggle");
+    const htmlElement = document.documentElement;
+    const icon = themeToggle.querySelector("i");
+
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      htmlElement.classList.add("dark");
+      icon.setAttribute("data-lucide", "sun");
+    }
+    lucide.createIcons();
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = htmlElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      icon.setAttribute("data-lucide", isDark ? "sun" : "moon");
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
